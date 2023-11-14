@@ -1,0 +1,13 @@
+{
+  "name": "streaming-csv",
+  "version": "1.0.0",
+  "description": "test repo to practice nodejs processing csv file via streams",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Maksym Shenderuk <jaood96@gmail.com>",
+  "license": "MIT"
+}
