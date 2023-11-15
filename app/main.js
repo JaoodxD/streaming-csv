@@ -1,17 +1,12 @@
 const API_URL = 'http://localhost:3000'
 
-async function consumeAPI ({ signal }) {
+async function consumeAPI (signal) {
   const res = await fetch(API_URL, { signal })
   const reader = res.body
     .pipeThrough(new TextDecoderStream())
     .pipeThrough(parseNDJSON())
-    .pipeTo(
-      new WritableStream({
-        write (chunk) {
-          console.log(chunk)
-        }
-      })
-    )
+  // .pipeTo(appendToHtml(cards))
+  return reader
 }
 
 function parseNDJSON () {
@@ -29,6 +24,34 @@ function parseNDJSON () {
   })
 }
 
+let totalCards = 0
+
+function appendToHtml (element) {
+  let counter = 0
+  return new WritableStream({
+    write ({ title, description }) {
+      const card = `
+      <article>
+        <div>
+          <h3>[${++counter}] ${title}</h3>
+          <p>${description}</p>
+          <a href="#">Here's why</a>
+        </div>
+      </article>
+      `
+      if (totalCards >= 20) {
+        totalCards = 0
+        element.innerHTML = ''
+      }
+      totalCards++
+      element.innerHTML += card
+    },
+    abort (reason) {
+      console.log('aborted*', reason)
+    }
+  })
+}
+
 const [start, stop, cards] = ['start', 'stop', 'cards'].map(id =>
   document.getElementById(id)
 )
@@ -36,15 +59,16 @@ const [start, stop, cards] = ['start', 'stop', 'cards'].map(id =>
 let abortController = new AbortController()
 
 start.addEventListener('click', async () => {
-  abortController = new AbortController()
-  await consumeAPI(abortController)
+  try {
+    const reader = await consumeAPI(abortController.signal)
+    await reader.pipeTo(appendToHtml(cards), { signal: abortController.signal })
+  } catch (error) {
+    console.log('error', error)
+  }
 })
 
-stop.addEventListener('click', async () => {
-  try {
-    abortController.abort()
-    console.log('aborting...')
-  } catch (error) {
-    console.log('something happen', error)
-  }
+stop.addEventListener('click', () => {
+  abortController.abort()
+  console.log('aborting...')
+  abortController = new AbortController()
 })
