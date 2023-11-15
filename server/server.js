@@ -17,24 +17,31 @@ export default function serve ({ port, path, throttle }) {
       return
     }
 
+    const abortController = new AbortController()
+    let chunksCount = 0
     try {
-      response.writeHead(headers)
-      const csv = createReadStream(path)
+      response.writeHead(200, headers)
+      const { signal } = abortController
+      const csv = createReadStream(path, { signal })
       await Readable.toWeb(csv)
         .pipeThrough(Transform.toWeb(csvtojson()))
         .pipeThrough(
           new TransformStream({
             async transform (chunk, controller) {
               const data = JSON.parse(Buffer.from(chunk))
-              const mappedData = JSON.stringify({ line: data.Quote }) + '\n'
+              const mappedData = JSON.stringify({ line: data.Quote })
               if (throttle) await wait(throttle)
-              controller.enqueue(mappedData)
+              chunksCount++
+              controller.enqueue(mappedData.concat('\n'))
             }
           })
         )
         .pipeTo(Writable.toWeb(response))
     } catch (error) {
-      console.log('something happen', error)
+      if (error.message.includes('abort')) {
+        abortController.abort()
+        console.log('aborted after chunks:', chunksCount)
+      } else console.log('something happen', error)
     }
   })
 
