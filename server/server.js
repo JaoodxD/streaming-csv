@@ -28,8 +28,10 @@ export default function serve ({ port, path, throttle }) {
         .pipeThrough(
           new TransformStream({
             async transform (chunk, controller) {
-              const data = JSON.parse(Buffer.from(chunk))
-              const mappedData = JSON.stringify({ line: data.Quote })
+              const { Quote: description, Character: title } = JSON.parse(
+                Buffer.from(chunk)
+              )
+              const mappedData = JSON.stringify({ title, description })
               if (throttle) await wait(throttle)
               chunksCount++
               controller.enqueue(mappedData.concat('\n'))
