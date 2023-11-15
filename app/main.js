@@ -28,6 +28,7 @@ let totalCards = 0
 
 function appendToHtml (element) {
   let counter = 0
+  let batchHtml = ''
   return new WritableStream({
     write ({ title, description }) {
       const card = `
@@ -42,9 +43,15 @@ function appendToHtml (element) {
       if (totalCards >= 16) {
         totalCards = 0
         element.innerHTML = ''
+        batchHtml = ''
       }
       totalCards++
-      element.innerHTML += card
+      // element.innerHTML += card
+      batchHtml += card
+      window.requestAnimationFrame(() => {
+        element.innerHTML += batchHtml
+        batchHtml = ''
+      })
     },
     abort (reason) {
       console.log('aborted*', reason)
