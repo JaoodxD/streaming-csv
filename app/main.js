@@ -34,12 +34,12 @@ function appendToHtml (element) {
       <article>
         <div>
           <h3>[${++counter}] ${title}</h3>
-          <p>${description}</p>
+          <p>${description.slice(0, 100)}</p>
           <a href="#">Here's why</a>
         </div>
       </article>
       `
-      if (totalCards >= 20) {
+      if (totalCards >= 16) {
         totalCards = 0
         element.innerHTML = ''
       }
