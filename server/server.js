@@ -5,7 +5,7 @@ import { Readable, Transform, Writable } from 'node:stream'
 import { setTimeout as wait } from 'node:timers/promises'
 import csvtojson from 'csvtojson'
 
-export default function serve ({ port, path, throttle }) {
+export default function serve ({ port, path, fields, throttle }) {
   const server = createServer(async function (request, response) {
     const headers = {
       'Access-Control-Allow-Origin': '*',
@@ -28,13 +28,15 @@ export default function serve ({ port, path, throttle }) {
         .pipeThrough(
           new TransformStream({
             async transform (chunk, controller) {
-              const { Quote: description, Character: title } = JSON.parse(
-                Buffer.from(chunk)
-              )
-              const mappedData = JSON.stringify({ title, description })
+              const data = JSON.parse(Buffer.from(chunk))
+              const mappedData = {}
+              for (const field in fields) {
+                const src = fields[field]
+                mappedData[field] = data[src]
+              }
               if (throttle) await wait(throttle)
               chunksCount++
-              controller.enqueue(mappedData.concat('\n'))
+              controller.enqueue(JSON.stringify(mappedData).concat('\n'))
             }
           })
         )
