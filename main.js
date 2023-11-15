@@ -7,7 +7,7 @@ const fields = {
   description: 'review_text'
 }
 
-const { stop } = serve({ port: 3000, path, fields })
+const { stop } = serve({ port: 3000, throttle: 100, path, fields })
 
 process.on('SIGINT', stop)
 process.on('SIGTERM', stop)
