@@ -25,10 +25,20 @@ function parseNDJSON () {
 }
 
 let totalCards = 0
+let rafId = null
+let drawing = false
 
 function appendToHtml (element) {
   let counter = 0
   let batchHtml = ''
+  drawing = true
+  function drawTable () {
+    element.innerHTML = batchHtml
+    if (drawing) rafId = window.requestAnimationFrame(drawTable)
+  }
+
+  window.requestAnimationFrame(drawTable)
+
   return new WritableStream({
     write ({ title, description }) {
       const card = `
@@ -40,18 +50,12 @@ function appendToHtml (element) {
         </div>
       </article>
       `
-      if (totalCards >= 16) {
+      if (totalCards >= 24) {
         totalCards = 0
-        element.innerHTML = ''
         batchHtml = ''
       }
       totalCards++
-      // element.innerHTML += card
       batchHtml += card
-      window.requestAnimationFrame(() => {
-        element.innerHTML += batchHtml
-        batchHtml = ''
-      })
     },
     abort (reason) {
       console.log('aborted*', reason)
@@ -77,5 +81,7 @@ start.addEventListener('click', async () => {
 stop.addEventListener('click', () => {
   abortController.abort()
   console.log('aborting...')
+  drawing = false
+  window.cancelAnimationFrame(rafId)
   abortController = new AbortController()
 })
