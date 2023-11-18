@@ -18,7 +18,7 @@ const datasets = {
   }
 }
 
-const { stop } = serve({ port: 3000, throttle: 100, ...datasets.facebook })
+const { stop } = serve({ port: 3000, throttle: 0, ...datasets.facebook })
 
 process.on('SIGINT', stop)
 process.on('SIGTERM', stop)
