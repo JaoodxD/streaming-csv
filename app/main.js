@@ -27,15 +27,22 @@ function parseNDJSON () {
 let totalCards = 0
 let rafId = null
 let drawing = false
+let ops = 0
 
-function appendToHtml (element) {
+function appendToHtml (element, counterLabel) {
   let counter = 0
   let batchHtml = ''
   drawing = true
+  ops = 0
   function drawTable () {
     element.innerHTML = batchHtml
     if (drawing) rafId = window.requestAnimationFrame(drawTable)
   }
+
+  const interval = setInterval(() => {
+    counterLabel.innerHTML = ops
+    ops = 0
+  }, 1000)
 
   window.requestAnimationFrame(drawTable)
 
@@ -55,24 +62,31 @@ function appendToHtml (element) {
         batchHtml = ''
       }
       totalCards++
+      ops++
       batchHtml += card
     },
     abort (reason) {
       console.log('aborted*', reason)
+      clearInterval(interval)
     }
   })
 }
 
-const [start, stop, cards] = ['start', 'stop', 'cards'].map(id =>
-  document.getElementById(id)
-)
+const [start, stop, counterLabel, cards] = [
+  'start',
+  'stop',
+  'counter',
+  'cards'
+].map(id => document.getElementById(id))
 
 let abortController = new AbortController()
 
 start.addEventListener('click', async () => {
   try {
     const reader = await consumeAPI(abortController.signal)
-    await reader.pipeTo(appendToHtml(cards), { signal: abortController.signal })
+    await reader.pipeTo(appendToHtml(cards, counterLabel), {
+      signal: abortController.signal
+    })
   } catch (error) {
     console.log('error', error)
   }
