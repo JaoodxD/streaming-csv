@@ -21,6 +21,9 @@ export default function serve ({ port, path, fields, throttle }) {
     let chunksCount = 0
     try {
       response.writeHead(200, headers)
+      response.on('finish', () => {
+        console.log('Total chunks sent', chunksCount)
+      })
       const { signal } = abortController
       const csv = createReadStream(path, { signal })
       await Readable.toWeb(csv)
