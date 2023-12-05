@@ -5,7 +5,6 @@ async function consumeAPI (signal) {
   const reader = res.body
     .pipeThrough(new TextDecoderStream())
     .pipeThrough(parseNDJSON())
-  // .pipeTo(appendToHtml(cards))
   return reader
 }
 
